@@ -1,0 +1,68 @@
+# 'a' w prefiksach oznacza 'deka'
+# 'A' w prefiksach oznacza 'deka' w zapisie dk
+# 'i' w prefiksach oznacza możliwe prefiksy 'Gi', 'Mi', 'Ki'
+# '-' w prefiksach oznacza 'tylko podstawowe'
+# '+' w prefiksach oznacza 'bez podstawowego'
+# '?' w jednostkach oznacza 'alternatywna' (dla wolta, ampera i wata)
+# ':' w jednostkach oznacza rodzaj żeński
+
+# gwiazdka kończąca opis oznacza, że te jednostki
+# są rozpoznawane wyłącznie na żądanie
+
+_typ E - elektryka i elektronika*
+_typ L - elektryka
+_typ T - czas
+_typ I - informatyka*
+_typ P - predkość
+_typ W - waga
+_typ D - rozmiar, kąt
+_typ G - pogoda
+_typ K - miary kuchenne
+_typ M - mechanika
+_typ F - fizyka*
+_typ R - rolnictwo*
+_typ U - budownictwo*
+_typ S - samochody*
+_typ X - pozostałe*
+
+SDUGK m numcdk metr metry metrów metra
+
+LE Ω,ohm umkMG om omy omów oma
+SLE ?V - wolt wolty wolt wolta
+SLE V umkM wolt wolty woltów wolta
+SLE ?A numk amper ampery amper ampera
+SLE A numk amper ampery amperów ampera
+LE ?W - wat waty wat wata
+SLEM W numkMG wat waty watów wata
+SLE :Wh kM watogodzina watogodziny watogodzin watogodziny
+SLE :Ah m amperogodzina amperogodziny amperogodzin amperogodziny
+E F pnum farad farady faradów farada
+E H um henr henry henrów henra
+EL Hz  kMGT herc herce herców herca
+T :sec,sek,s,sek. pnum sekunda sekundy sekund sekundy
+T :min,min. - minuta minuty minut minuty
+
+P m/s,m/sec,m/sek mck metr-na-sekundę metry-na-sekundę metrów-na-sekundę metra-na-sekundę
+SP m/h mck metr-na-godzinę metry-na-godzinę metrów-na-godzinę metra-na-godzinę
+SP :mph - mila-na-godzinę mile-* mil-* mili-*
+
+UKW g umaAk gram gramy gramów grama
+KW ?dkg - deko deko deko deko
+KD l mc litr litry litrów litra 
+I b +kMGTP bit bity bitów bita
+I B +ikMGTP bajt bajty bajtów bajta
+I bps,b/s,b/sek kMGT bit-na-sekundę bity-* bitów-* bita-*
+I Bps,B/s,B/sek kMGT bajt-na-sekundę bajty-* bajtów-* bajta-*
+FG Pa hM paskal paskale paskali paskala
+UDG m2,m² mck metr-kwadratowy metry-kwadratowe metrów-kwadratorych metra-kwadratowego
+UDG m3,m³ mck metr-sześcienny metry-sześcienne metrów-sześciennych metra-sześciennego
+G °C - stopień-celsjusza stopnie-* stopni-* stopnia-*
+G °F - stopień-farenajta stopnie-* stopni-* stopnia-*
+GD ° - stopień stopnie stopni stopnia
+FMX N - niuton niutony niutonów niutona
+FMX Nm - niutonometr niutonometry niutonometrów niutonometra
+R q - kwintal kwintale kwintali kwintala
+UR ha - hektar hektary hektarów hektara
+KF :cal k kaloria kalorie kalorii kalorii
+F J k dżul dżule dżuli dżula
+SMX rpm,obr/min - obrót-na-minutę obroty-* obrotów-* obrotu-(

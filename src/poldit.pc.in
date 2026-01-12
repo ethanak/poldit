@@ -1,0 +1,10 @@
+prefix={PREFIX}
+exec_prefix={PREFIX}
+libdir={LIBDIR}
+includedir={PREFIX}/include
+
+Name: poldit
+Description: Poldit stringifier
+Version: 0.1
+Cflags: -I${includedir}
+Libs: -L${libdir} -lpoldit
