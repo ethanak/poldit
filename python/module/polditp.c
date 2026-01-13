@@ -85,68 +85,70 @@ static PyObject *PO_Stringify(PyObject *self, PyObject *args,PyObject *kwargs)
 
 static PyObject *PO_Colloquial(PyObject *self, PyObject *args)
 {
-    int n;
-    if (!PyArg_ParseTuple(args,"i",&n)) {
+    int n=-1;
+    if (!PyArg_ParseTuple(args,"|p",&n)) {
         return NULL;
     }
-    poldit *buffer = &((poldit_Object *)self)->bufr;
-    poldit_setColloquial(buffer,n);
-    Py_RETURN_NONE;
+    if (n >= 0) poldit_setColloquial(&((poldit_Object *)self)->bufr,n);
+    else n = poldit_getColloquial(&((poldit_Object *)self)->bufr);
+    return Py_BuildValue("i",n);
 }
 
 static PyObject *PO_Decibase(PyObject *self, PyObject *args)
 {
-    int n;
-    if (!PyArg_ParseTuple(args,"i",&n)) {
+    int n=-1;
+    if (!PyArg_ParseTuple(args,"|p",&n)) {
         return NULL;
     }
-    poldit *buffer = &((poldit_Object *)self)->bufr;
-    poldit_setDecibase(buffer,n);
-    Py_RETURN_NONE;
+    if (n >= 0) poldit_setDecibase(&((poldit_Object *)self)->bufr,n);
+    else n = poldit_getDecibase(&((poldit_Object *)self)->bufr);
+    return Py_BuildValue("i",n);
 }
 
 static PyObject *PO_Sepspell(PyObject *self, PyObject *args)
 {
-    int n;
-    if (!PyArg_ParseTuple(args,"i",&n)) {
+    int n=-1;
+    if (!PyArg_ParseTuple(args,"|p",&n)) {
         return NULL;
     }
-    poldit *buffer = &((poldit_Object *)self)->bufr;
-    poldit_setSepspell(buffer,n);
-    Py_RETURN_NONE;
+    if (n >= 0) poldit_setSepspell(&((poldit_Object *)self)->bufr,n);
+    else n = poldit_getSepspell(&((poldit_Object *)self)->bufr);
+    return Py_BuildValue("i",n);
 }
 
 static PyObject *PO_Natural(PyObject *self, PyObject *args)
 {
-    int n;
-    if (!PyArg_ParseTuple(args,"i",&n)) {
+    int n=-1;
+    if (!PyArg_ParseTuple(args,"|p",&n)) {
         return NULL;
     }
-    poldit *buffer = &((poldit_Object *)self)->bufr;
-    poldit_setNatural(buffer,n);
-    Py_RETURN_NONE;
+    if (n >= 0) poldit_setNatural(&((poldit_Object *)self)->bufr,n);
+    else n = poldit_getNatural(&((poldit_Object *)self)->bufr);
+    return Py_BuildValue("i",n);    poldit *buffer = &((poldit_Object *)self)->bufr;
 }
 
 static PyObject *PO_Decipoint(PyObject *self, PyObject *args)
 {
-    char * s;
-    if (!PyArg_ParseTuple(args,"s",&s)) {
+    char * s = NULL;
+    if (!PyArg_ParseTuple(args,"|s",&s)) {
         return NULL;
     }
     poldit *buffer = &((poldit_Object *)self)->bufr;
-    poldit_setDecipoint(buffer,s);
-    Py_RETURN_NONE;
+    if (s) poldit_setDecipoint(buffer,s);
+    return Py_BuildValue("s",buffer->decipoint);
 }
 
 static PyObject *PO_selUnit(PyObject *self, PyObject *args)
 {
-    char * s;
-    if (!PyArg_ParseTuple(args,"s",&s)) {
+    char * s = NULL;
+    if (!PyArg_ParseTuple(args,"|s",&s)) {
         return NULL;
     }
     poldit *buffer = &((poldit_Object *)self)->bufr;
-    poldit_selUnits(buffer,s);
-    Py_RETURN_NONE;
+    if (s) poldit_selUnits(buffer,s);
+    char buf[32];
+    poldit_getSelUnits(buffer, buf);
+    return Py_BuildValue("s",buf);
 }
 
 static PyObject *PO_uInClass(PyObject *self, PyObject *args)
@@ -177,20 +179,30 @@ static PyMethodDef poldit_methods[] = {
       base = bool - czytanie ułamków dziesiętnych\n\
       sep  = bool - wyraźna separacja przy literowaniu\n\
       nat  = bool - naturalizacja\n\
-      unit = str  - selektoe jednostek (patrz selUnit)\n\
+      unit = str  - selektor jednostek (patrz selUnit)\n\
       dp   = str  - reprezentacja fonetyczna kropki dziesiętnej\n"},
     {"Colloquial", (PyCFunction)PO_Colloquial, METH_VARARGS,
-     "Colloquial(bool) ustawia tryb potoczny\n"},
+     "Colloquial(bool) ustawia tryb potoczny\n\
+Colloquial() odczytuje ustawienie\n"},
     {"Decibase", (PyCFunction)PO_Decibase, METH_VARARGS,
-     "Decibase(bool) ustawia tryb czytania podstawy ułamków dziesiętnych\n"},
+     "Decibase(bool) ustawia tryb czytania\n\
+podstawy ułamków dziesiętnych\n\
+Decibase() - odczytuje ustawienie\n"},
     {"Sepspell", (PyCFunction)PO_Sepspell, METH_VARARGS,
-     "Sepspell(bool) wyraźna separacja grup przy literowaiu\n"},
+     "Sepspell(bool) ustawia wyraźną separację grup\n\
+przy literowaiu\n\
+Sepspell() - odczytuje ustawienie"},
     {"Natural", (PyCFunction)PO_Natural, METH_VARARGS,
-     "Natural(bool) naturalizacja (usunięcie tzw. hiperpoprawności)\n"},
+     "Natural(bool) ustawia naturalizację\n\
+(usunięcie tzw. hiperpoprawności)\n\
+Natural() - odczytuje ustawienie"},
     {"Decipoint", (PyCFunction)PO_Decipoint, METH_VARARGS,
-     "Decipoint(str) reprezentacja fonetyczna kropki dziesiętnej\n(domyślnie \"i\")\n"},
+     "Decipoint(str) ustawia reprezentację fonetyczną kropki dziesiętnej\n(domyślnie \"i\")\n\
+Zwraca ustawioną reprezentację\n\
+Decipoint() - odczytuje ustawienie\n"},
     {"selUnit", (PyCFunction)PO_selUnit, METH_VARARGS,
-     "selUnit(str) ustalenie rozpoznawanych jednostek:\n"},
+     "selUnit() - zwraca string z aktualnie rozpoznawanych typów\n\
+selUnit(str) ustala rozpoznawane typy jednostek:\n"},
     {"unitInClass", (PyCFunction)PO_uInClass, METH_VARARGS,
      "unitInClass(idx, znak) zwraca (next_idx, opis) lub None\n"},
     {NULL,NULL, 0,NULL}

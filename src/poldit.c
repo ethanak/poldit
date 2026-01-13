@@ -1962,11 +1962,21 @@ void poldit_setColloquial(poldit *buffer, int yesno)
     else buffer->flags &= ~FLG_COLL;
 }
 
+int poldit_getColloquial(poldit *buffer)
+{
+    return (buffer->flags & FLG_COLL) ? 1 : 0;
+}
+
 uint8_t poldit_setDecipoint(poldit *buffer, const char *dp)
 {
     if (strlen(dp) > 15) return 0;
     strcpy(buffer->decipoint,dp);
     return 1;
+}
+
+const char *poldit_getDecipoint(poldit *buffer)
+{
+    return buffer->decipoint;
 }
 
 void poldit_setDecibase(poldit *buffer, int yesno)
@@ -1975,16 +1985,44 @@ void poldit_setDecibase(poldit *buffer, int yesno)
     else buffer->flags &= ~FLG_DIVD;
 }
 
+int poldit_getDecibase(poldit *buffer)
+{
+    return (buffer->flags & FLG_DIVD) ? 1 : 0;
+}
+
 void poldit_setNatural(poldit *buffer, int yesno)
 {
     if (yesno) buffer->flags |= FLG_NATURAL;
     else buffer->flags &= ~FLG_NATURAL;
 }
 
+int poldit_getNatural(poldit *buffer)
+{
+    return (buffer->flags % FLG_NATURAL) ? 1 : 0;
+}
+
 void poldit_setSepspell(poldit *buffer, int yesno)
 {
     if (yesno) buffer->flags |= FLG_SPELCOMMA;
     else buffer->flags &= ~FLG_SPELCOMMA;
+}
+
+int poldit_getSepspell(poldit *buffer)
+{
+    return (buffer->flags & FLG_SPELCOMMA) ? 1 : 0;
+}
+
+int poldit_getSelUnits(poldit *buffer, char *units)
+{
+    int i,rc;
+    for (i=rc=0;unitsel[i];i++) {
+        if (buffer->flags & (0x100 << i)) {
+            if (units) *units++ = unitsel[i];
+            rc ++;
+        }
+    }
+    if (units) *units = 0;
+    return rc;
 }
 
 void poldit_selUnits(poldit *buffer, const char *usel)

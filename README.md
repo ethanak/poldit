@@ -54,6 +54,12 @@ uint8_t poldit_setDecipoint(poldit *buffer, const char *dp)
 void poldit_selUnits(poldit *buffer, const char *usel)
 const char *poldit_getUnitTypes(void)
 int poldit_unitType(int unitPos, char utype, char *buffer)
+const char *poldit_getDecipoint(poldit *buffer)
+int poldit_getColloquial(poldit *buffer)
+int poldit_getNatural(poldit *buffer)
+int poldit_getDecibase(poldit *buffer)
+int poldit_getSepspell(poldit *buffer)
+int poldit_getSelUnits(poldit *buffer, char *units)
 
 ```
 
@@ -106,20 +112,24 @@ jeśli znamy maksymalną długość wynikowego napisu!
 Ustawia bufor w tryb rzeczywistej konwersji i ustawia początek przetwarzania.
 Należy stosować razem z ```poldit_setBuffer```.
 
-**void poldit_setColloquial(poldit \*buffer, int yesno)**
+**void poldit_setColloquial(poldit \*buffer, int yesno)**\
+**int poldit_getColloquial(poldit \*buffer)**
 
 Ustawia tryb wymowy potocznej
 
-**void poldit_setSepspell(poldit \*buffer, int yesno)**
+**void poldit_setSepspell(poldit \*buffer, int yesno)**\
+**int poldit_getSepspell(poldit \*buffer)**
 
 Ustawia tryb wyraźnego oddzielania liter i liczb przy literowaniu
 
-**void poldit_setDecibase(poldit \*buffer, int yesno)**
+**void poldit_setDecibase(poldit \*buffer, int yesno)**\
+**int poldit_getDecibase(poldit \*buffer)**
 
 Przełącza na tryb czytania ułamków dziesiętnych (czyli 2.25 będzie czytane
 jako "dwa i dwadzieścia pięć setnych")
 
-**void poldit_setNatural(poldit \*buffer, int yesno)**
+**void poldit_setNatural(poldit \*buffer, int yesno)**\
+**int poldit_getNatural(poldit \*buffer)**
 
 Usuwa tzw. "hiperpoprawność" występującą w niektórych syntezatorach
 (np. RHVoice). Przykładowo: syntezator może wymawiać słowo "pięćdziesiąt"
@@ -128,16 +138,18 @@ Naturalizacja polega na zmianie tego słowa na prawidłowy fonetycznie
 "pieńdziesiąt". Dotyczy to wyłącznie kilku zbitek liter i tylko w
 generowanych liczebnikach.
 
-**uint8_t poldit_setDecipoint(poldit \*buffer, const char \*dp)**
+**uint8_t poldit_setDecipoint(poldit \*buffer, const char \*dp)**\
+**const char \*poldit_getDecipoint(poldit \*buffer)**
 
 Ustawia sposób czytania kropki dziesiętnej. Domyślnie jest to "i"
 (czyli 2.2 będzie czytane jako "dwa i dwa"), podanie np. "kropka"
 spowoduje czytanie jako "dwa kropka dwa". Maksymalna długość
 to 15 bajtów. Zwraca 1 jeśli udało się ustawić, 0 jeśli nie.
 
+
 **void poldit_selUnits(poldit \*buffer, const char \*usel)**
 
-Ustawia rozpoznawane typy jednostek (patrz **poldit_getUnitTypes**),
+Ustawia rozpoznawane typy jednostek (patrz **poldit_getUnitTypes**).
 Argument **usel** może zawierać więcej niż jeden ty, przykładowo
 jeśli **T** to typ 'czas', **E** to typ 'elektryka' po wywołaniu:
 ```c
@@ -147,6 +159,13 @@ będą rozpoznawane jednoski takie jak 'µs' czy 'Ah', ale nie 'km/h'.
 Głównym celem jest uniknięcie traktowania jako jednostki niektórych
 specyficznych konstrukcji, np 'autobus linii 5 A' nie powinien być przełożony
 na 'autobus linii 5 amper'.
+
+**int poldit_getSelUnits(poldit \*buffer, char \*units)**
+
+Zwraca ilość ustawionych typów i wstawia do **units** string
+odpowiadający ustawionym typom.
+Argument **units** musi być buforem o długości co najmniej 24 bajtów
+lub NULL.
 
 **const char \*poldit_getUnitTypes(void)**
 

@@ -24,10 +24,18 @@ extern poldit *poldit_Init(poldit *buffer);
 extern void poldit_setColloquial(poldit *buffer, int yesno);
 extern uint8_t poldit_setDecipoint(poldit *buffer, const char *dp);
 extern void poldit_setNatural(poldit *buffer, int yesno);
-extern void poldit_setBuffer(poldit *buffer, char *buf);
 extern void poldit_setDecibase(poldit *buffer, int yesno);
 extern void poldit_setSepspell(poldit *buffer, int yesno);
 extern void poldit_selUnits(poldit *buffer, const char *usel);
+
+extern const char *poldit_getDecipoint(poldit *buffer);
+extern int poldit_getColloquial(poldit *buffer);
+extern int poldit_getNatural(poldit *buffer);
+extern int poldit_getDecibase(poldit *buffer);
+extern int poldit_getSepspell(poldit *buffer);
+extern int poldit_getSelUnits(poldit *buffer, char *units);
+
+extern void poldit_setBuffer(poldit *buffer, char *buf);
 extern void poldit_allocBuffer(poldit *buffer, size_t len);
 extern void poldit_setAllocSize(poldit *buffer, size_t len);
 extern void poldit_freeBuffer(poldit *buffer);
