@@ -139,3 +139,21 @@ Wyrażenia:
 
 zamieniają po prostu słowa na rozwinięcia.
 
+## Przykład rzeczywistej aplikacji - demo/meteo.py
+
+Aplikacja pobiera aktualny stan pogody z serwisu openmeteo
+i wypisuje na wyjściu napis, który może być przekazany bezpośrednio
+do syntezatora.
+
+Przykłady wywołania (dla Linuksa):
+
+```sh
+#dla espeak
+python3 demo/meteo.py | espeak -vpl
+
+#dla RHVoice
+python3 demo/meteo.py | RHVoice-test -r 130 -o alicja
+
+#dla speech-dispatchera
+spd-say -l pl -t female1 -r 30 "`python3 demo/meteo.py`"
+```
