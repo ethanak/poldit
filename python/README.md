@@ -152,7 +152,7 @@ Przykłady wywołania (dla Linuksa):
 python3 demo/meteo.py | espeak -vpl
 
 #dla RHVoice
-python3 demo/meteo.py | RHVoice-test -r 130 -o alicja
+python3 demo/meteo.py | RHVoice-test -r 130 -p alicja
 
 #dla speech-dispatchera
 spd-say -l pl -t female1 -r 30 "`python3 demo/meteo.py`"
