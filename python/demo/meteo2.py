@@ -99,11 +99,9 @@ class weatherspk(object):
             spstr="błąd połączenia"
         spiker = speechd.Client(self.__class__.spd_data.get('name','pogoda'),autospawn=True)
         spiker.set_language('pl')
-        modl = self.__class__.spd_data.get('module', None)
-        if modl is not None:
+        if (modl := self.__class__.spd_data.get('module', None)) is not None:
             spiker.set_output_module(modl)
-        vox = self.__class__.spd_data.get('voicetype', None)
-        if (voc := self.__class__.spd_data.get('voicetype', None)) is not None:
+        if (vox := self.__class__.spd_data.get('voicetype', None)) is not None:
             spiker.set_voice(vox)
         elif (vox := self.__class__.spd_data.get('voice', None)) is not None:
             spiker.set_synthesis_voice(vox)
