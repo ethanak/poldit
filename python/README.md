@@ -43,6 +43,10 @@ W pozostałych etapach brane jest pod uwagę wyłącznie **i**.
 
 ## Instalacja
 
+**UWAGA**
+
+Sposób instalacji podano dla Linuksa!
+
 Instalacja jest typowa. Należy zainstalować moduły wymagane przez
 instalator (setuptools) oraz deweloperski Python3.
 Zalecane jest rozszerzenie build, czyli:
@@ -139,7 +143,9 @@ Wyrażenia:
 
 zamieniają po prostu słowa na rozwinięcia.
 
-## Przykład rzeczywistej aplikacji - demo/meteo.py
+## Przykłady rzeczywistej aplikacji
+
+### demo/meteo.py
 
 Aplikacja pobiera aktualny stan pogody z serwisu openmeteo
 i wypisuje na wyjściu napis, który może być przekazany bezpośrednio
@@ -156,4 +162,24 @@ python3 demo/meteo.py | RHVoice-test -r 130 -p alicja
 
 #dla speech-dispatchera
 spd-say -l pl -t female1 -r 30 "`python3 demo/meteo.py`"
+#lub
+python3 demo/meteo.py | spd-say -l pl -t female1 -r 30 -e >/dev/null
+```
+
+### demo/meteo2.py
+
+Aplikacja pobiera aktualny stan pogody z serwisu openmeteo
+i przekazuje komunikat do speech-dispatchera. Wymaga skonfigurowanego
+speech-dispatchera oraz modułu python3-speechd.
+
+Przykład ustawień dla RHVoice:
+
+```python
+
+    spd_data = {
+        'module': 'rhvoice',
+        'voice': 'alicja',
+        'pitch': -10,
+        'rate': 30
+    }
 ```

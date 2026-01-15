@@ -185,7 +185,8 @@ class genUnit(object):
         uukeys=''.join(sorted(self.uutyps.keys()))
         print("static const char *unitsel=\"%s\";\n\n" % uukeys, file=self.file)
         uval = 0
-        ubit = 0x100
+        uustart = 0x100
+        ubit = uustart
         ulis = []
         for u in uukeys:
             print("#define UNIT_%s 0x%x" % (u, ubit), file = self.file)
@@ -196,6 +197,7 @@ class genUnit(object):
         ulis.append("A - wszystkie jednostki\\n")
         ulis.append("B - Nie używaj jednostek\\n")
         ulis = '\\\n        '.join(ulis)
+        print("#define UNIT_MIN 0x%x" % uustart, file = self.file);
         print("static int unit_initial = 0x%x;" % uval, file = self.file);
         print("static const char *uudescr = \"        %s\";" % ulis, file = self.file)
 

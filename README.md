@@ -5,6 +5,13 @@ Library for phonetic number conversion for the Polish language.
 As it is interested only for Polish language speakers, further documentation
 will be only in Polish
 
+**UWAGA**
+
+Załączony plik src/Makefile jest przeznaczony dla Linuksa.
+Możliwe jest skompilowanie tego np. dla Windows czy MacOS, ale
+z uwagi na to że nie mam dostępu do tych systemów sposób
+kompilacji pozostawiam użytkownikowi.
+
 Biblioteka służąca do tworzenia fonetycznego tekstu z treści zawierającej
 liczby (w tym daty, godziny i wartości mianowane). Utworzona z myślą o
 tworzeniu komunikatów bezpośrednio dla syntezatora mowy (RHVoice, Ivona,
@@ -150,7 +157,7 @@ to 15 bajtów. Zwraca 1 jeśli udało się ustawić, 0 jeśli nie.
 **void poldit_selUnits(poldit \*buffer, const char \*usel)**
 
 Ustawia rozpoznawane typy jednostek (patrz **poldit_getUnitTypes**).
-Argument **usel** może zawierać więcej niż jeden ty, przykładowo
+Argument **usel** może zawierać więcej niż jeden typ, przykładowo
 jeśli **T** to typ 'czas', **E** to typ 'elektryka' po wywołaniu:
 ```c
 poldit_selUnits(buffer, 'TE');
@@ -159,6 +166,10 @@ będą rozpoznawane jednoski takie jak 'µs' czy 'Ah', ale nie 'km/h'.
 Głównym celem jest uniknięcie traktowania jako jednostki niektórych
 specyficznych konstrukcji, np 'autobus linii 5 A' nie powinien być przełożony
 na 'autobus linii 5 amper'.
+
+Jeśli **usel** rozpoczyna się od znaku '+', typy jednostek są dodawane
+do aktualnych. Jeśli rozpoczyna się od znaku '-', typy jednostek są
+usuwabe z aktualnych.
 
 **int poldit_getSelUnits(poldit \*buffer, char \*units)**
 

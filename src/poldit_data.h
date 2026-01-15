@@ -28,6 +28,8 @@ static const struct chardic charDic[] = {
 {181,"mikro"},
 {162,"cent"},
 {163,"funt"},
+{167,"paragraf"},
+{8800,"nierówne"},
 {0, NULL}
 };
 static const uint16_t charCode[]={
@@ -434,6 +436,7 @@ static const char *unitsel="DEFGIKLMPRSTUWX";
 #define UNIT_U 0x100000
 #define UNIT_W 0x200000
 #define UNIT_X 0x400000
+#define UNIT_MIN 0x100
 static int unit_initial = 0x29e900;
 static const char *uudescr = "        D - rozmiar, kąt\n\
         E - elektryka i elektronika*\n\

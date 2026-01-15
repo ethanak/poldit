@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import requests, json, poldit, os, time
+import requests, json, poldit, os, time, speechd
 
-class weather(object):
+class weatherspk(object):
     #Ustaw własne wwspółrzędne geograficzne
     latitude  = 52.23
     longitude = 23.01
@@ -11,6 +11,23 @@ class weather(object):
 
     #ustaw zależnie od syntezatora
     natural = True
+
+    # możliwe parametry:
+    # module - nazwa modułu wyjściowego
+    # voicetype - typ głosu (np. 'MALE1')
+    # voice - nazwa głosu (np. 'alicja')
+    # name - nazwa klienta, domyślnie 'pogoda'
+    # pitch - wysokość od -100 do 100 (domyślnie 0)
+    # rate  - tempo od -100 do 100 (domyślnie 0)
+    # vol - głośność od -100 do 100 (domyślnie 100)
+    
+    
+    spd_data = {
+        'module':'espeak-ng',
+        'voicetype': 'male1',
+        'pitch': 10,
+        'rate': 20
+    }
     
     def __init__(self):
         self._fmter = None
@@ -65,7 +82,43 @@ class weather(object):
         s='. '.join(s)
         return self.fmter.Stringify(s)
 
-if __name__ == '__main__':
-    w=weather()
-    spstr = w.getWString()
-    print(spstr)
+    def _getv(self, param):
+        p=self.__class__.spd_data.get(param, None)
+        if p is None:
+            return None
+        if not isinstance(p, int):
+            return None
+        if p < -100 or p > 100:
+            return None
+        return p
+            
+    def sayWeather(self):
+        try:
+            spstr = self.getWString()
+        except:
+            spstr="błąd połączenia"
+        spiker = speechd.Client(self.__class__.spd_data.get('name','pogoda'),autospawn=True)
+        spiker.set_language('pl')
+        modl = self.__class__.spd_data.get('module', None)
+        if modl is not None:
+            spiker.set_output_module(modl)
+        vox = self.__class__.spd_data.get('voicetype', None)
+        if vox is not None:
+            spiker.set_voice(vox)
+        else:
+            vox = self.__class__.spd_data.get('voice', None)
+            if vox is not None:
+                spiker.set_synthesis_voice(vox)
+        p=self._getv('pitch')
+        if p is not None:
+            spiker.set_pitch(p)
+        p=self._getv('rate')
+        if p is not None:
+            spiker.set_rate(p)
+        p=self._getv('vol')
+        if p is not None:
+            spiker.set_volume(p)
+        spiker.speak(spstr)
+        spiker.close()
+        
+weather().sayWeather()

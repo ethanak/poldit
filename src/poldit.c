@@ -497,6 +497,8 @@ static const struct numPfx {
     {"do około", NULL,NPF_FIRST | NPF_LAST},
     {"do ok.", "do około", NPF_FIRST | NPF_LAST},
     {"do", NULL,NPF_FIRST | NPF_LAST},
+    {"z", NULL,NPF_LAST},
+    {"ze", NULL,NPF_LAST},
     {NULL, 0}};
 
 
@@ -2016,7 +2018,7 @@ int poldit_getSelUnits(poldit *buffer, char *units)
 {
     int i,rc;
     for (i=rc=0;unitsel[i];i++) {
-        if (buffer->flags & (0x100 << i)) {
+        if (buffer->flags & (UNIT_MIN << i)) {
             if (units) *units++ = unitsel[i];
             rc ++;
         }
@@ -2047,9 +2049,9 @@ void poldit_selUnits(poldit *buffer, const char *usel)
         int n = chrpos(unitsel, *usel);
         if (n >= 0) {
             if (neg)
-                buffer->flags &= ~(0x100 << n);
+                buffer->flags &= ~(UNIT_MIN << n);
             else
-                buffer->flags |= 0x100 << n;
+                buffer->flags |= UNIT_MIN << n;
         }
     }
 }
@@ -2142,7 +2144,7 @@ int poldit_unitType(int unitPos, char utype, char *buffer)
     else {
         n = chrpos(unitsel, utype);
         if (n < 0) return -1;
-        flags = 0x100 << n;
+        flags = UNIT_MIN << n;
     }
     for (;unitDefs[unitPos].unit; unitPos++) {
         if (!(unitDefs[unitPos].flags & flags)) continue;
