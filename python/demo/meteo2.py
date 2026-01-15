@@ -103,22 +103,17 @@ class weatherspk(object):
         if modl is not None:
             spiker.set_output_module(modl)
         vox = self.__class__.spd_data.get('voicetype', None)
-        if vox is not None:
+        if (voc := self.__class__.spd_data.get('voicetype', None)) is not None:
             spiker.set_voice(vox)
-        else:
-            vox = self.__class__.spd_data.get('voice', None)
-            if vox is not None:
-                spiker.set_synthesis_voice(vox)
-        p=self._getv('pitch')
-        if p is not None:
+        elif (vox := self.__class__.spd_data.get('voice', None)) is not None:
+            spiker.set_synthesis_voice(vox)
+        if (p := self._getv('pitch')) is not None:
             spiker.set_pitch(p)
-        p=self._getv('rate')
-        if p is not None:
+        if (p := self._getv('rate')) is not None:
             spiker.set_rate(p)
-        p=self._getv('vol')
-        if p is not None:
+        if (p := self._getv('vol')) is not None:
             spiker.set_volume(p)
         spiker.speak(spstr)
         spiker.close()
         
-weather().sayWeather()
+weatherspk().sayWeather()
