@@ -237,7 +237,7 @@ static const struct {
     "eśse"
 #endif    
     },
-    {"ęćse","eńćse"},
+    {"ęć","eńć"},
     {"ętn","etn"},
     {NULL, NULL}};
     
