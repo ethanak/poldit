@@ -878,7 +878,7 @@ static size_t getNumCntTripletG(poldit *buffer, int n, int genre, int declin)
         }
         return len;
     }
-    if (n < 10) {
+    if (n <= 10) {
         pushbufs(dg_cntsmal[n-2][declin]);
     }
     else {
@@ -899,13 +899,10 @@ static size_t getNumCntG(poldit *buffer, int n, int genre, int decl)
     if (n >= 1000) {
         int m = (n / 1000) % 1000;
         n = n % 1000;
-        //printf("MN %d %d\n", m, n);
         if (m == 1) {
-            //printf("<%s>\n", dg_cntmils[0][decl]);
             pushbufs(dg_cntmils[0][decl]);
         }
         else {
-            //printf("<%s>\n", dg_cntmils[1][decl]);
             len += getNumCntTripletG(buffer, m, 0, decl);
             pushbufs(dg_cntmils[1][decl]);
         }
@@ -1189,60 +1186,12 @@ static size_t spellFmt(poldit *buffer, const char *str, int lstr)
         
 
 
-/*
-static size_t spellFmt(poldit *buffer, const char *str, int lstr)
-{
-    size_t len = 0;
-    
-    if (*str == '+') {
-        pushbufs("plus");
-        str++;
-        lstr--;
-    }
-    //printf("LSTR %d %s\n", lstr, str);
-    int was=0;
-    while (lstr > 0) {
-        while(lstr > 0) {
-            if (isdigit(*str)) break;
-            str++;
-            lstr--;
-        }
-        if (!lstr) break;
-        int nlen;
-        for (nlen=0;nlen < lstr && isdigit(str[nlen]);nlen++);
-        //printf("To spell: %-*.*s %d\n", nlen, nlen, str,nlen);
-        while (nlen > 0) {
-            if (was && buffer->flags & FLG_SPELCOMMA) pushbuf(",");
-            was = 1;
-            if (nlen <= 3) {
-                len += spellPart(buffer, str, nlen);
-                str += nlen;
-                lstr -=nlen;
-                nlen = 0;
-                //pushbuf(">"); // to taka kontrola była
-                break;
-            }
-            len += spellPart(buffer, str, 2);
-            str+= 2;
-            nlen -= 2;
-            lstr -= 2; // KURWA TEGO ZABRAKŁO 
-            
-        }
-
-    }
-    return len;
-
-}
-*/
-
 size_t stringifyFmt(poldit *buffer, struct numberForm *nf)
 {
     size_t len = 0;
     int mode = nf->mode & 7;
     int genre = (nf->mode >> 3) & 3;
     int declin = (nf->mode >> 5) & 7;
-    //printf("MGD %d %d %d %-*.*s\n",
-    //    mode, genre, declin, nf->num1len, nf->num1len, nf->num1);
     if (mode >= FMT_SPELL) {
         len += spellFmt(buffer, nf->num1, nf->num1len);
         return len;
@@ -1309,7 +1258,7 @@ size_t stringifyDate(poldit *buffer, struct numberForm *nf)
     len += getNumPosTripletG(buffer, day, 0, (flags & MONFLG_DECLINE) ? 1 : 0);
     if (mon == MONTH_NONE) return len;
     pushbufs(namedMon[mon-1]);
-    printf("DFUPA\n");
+    ///printf("???\n");
     if (yer != YEAR_NONE) {
         if (flags & MONFLG_DECLINE) {
             len += getNumPosG(buffer, yer, 0, 1);
@@ -1918,12 +1867,14 @@ size_t poldit_Convert(poldit *buffer,const char *c)
 
             case DT_NUM:
             if (nf.starter) pushbufl(nf.starter, nf.starterlen);
+            printf("NUM %-10.10s\n", nf.num1);
             len += stringifyNumber(buffer, nf.subtyp1, nf.num1, nf.num1len, nf.starter ? nf.mode: 0,
                 nf.unit ? nf.unit->flags & FLG_FEMALE : 0, nf.subtyp2?NULL:nf.unit);
             if (nf.subtyp2) {
                 if (nf.inner) {
                     pushbufl(nf.inner, nf.innerlen);
                 }
+                
                 len += stringifyNumber(buffer, nf.subtyp2, nf.num2, nf.num2len, nf.mode,
                 nf.unit ? nf.unit->flags & FLG_FEMALE : 0,
                 nf.unit);
