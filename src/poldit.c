@@ -1867,7 +1867,6 @@ size_t poldit_Convert(poldit *buffer,const char *c)
 
             case DT_NUM:
             if (nf.starter) pushbufl(nf.starter, nf.starterlen);
-            printf("NUM %-10.10s\n", nf.num1);
             len += stringifyNumber(buffer, nf.subtyp1, nf.num1, nf.num1len, nf.starter ? nf.mode: 0,
                 nf.unit ? nf.unit->flags & FLG_FEMALE : 0, nf.subtyp2?NULL:nf.unit);
             if (nf.subtyp2) {
