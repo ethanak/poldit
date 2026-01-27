@@ -267,11 +267,20 @@ Tryb:
 * c - liczebnik zbiorowy
 * s - spelling (liczba)
 * S - spelling (dowolny ciąg znaków).
+* d - data (forma podstawowa, np. "piąty sierpnia dwa tysiące dwadzieścia")
+* D - data (forma odmieniona, np. "piątego sierpnia dwa tysiące dwudziestego")
 
 Dla p i c należy podać również:
 
 * rodzaj (m, f lub n)
 * przypadek (0-5, jeden z m, d, c, b, n, M lub mc jako miejscownik)
+
+Dla d i D można podać również ciąg znaków 'd', 'm', 'y' i 'x', określających
+znaczenie poszczególnych liczb. Rozpoznawane są maksymalnie trzy liczby,
+przy czym 'x' oznacza że dana liczba zostanie pominięta. Domyślnie jest
+'dmy' czyli dzień - miesiąc - rok. Przykładowo:
+
+**F\[Dxdm:2000 5 11\]** zostanie odczytane jako **piątego listopada**.
 
 Przykłady szablonów:
 

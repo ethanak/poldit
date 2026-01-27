@@ -121,6 +121,8 @@ enum {
     FMT_NORM,
     FMT_SPELL,
     FMT_SPELLALL,
+    FMT_DATE,
+    FMT_DATEDECL,
     FMT_MAX};
 
 static const struct unitDefs *getUnit(poldit *buffer,const char *str, const char **rest);
@@ -237,6 +239,7 @@ static const struct {
     "eśse"
 #endif    
     },
+    {"ęci","eńci"},
     {"ęć","eńć"},
     {"ętn","etn"},
     {NULL, NULL}};
@@ -1151,7 +1154,6 @@ static size_t spellFmt(poldit *buffer, const char *str, int lstr)
         if (zx_isdigit(znak)) {
             int nlen;
             for (nlen=0;nlen < lstr && isdigit(str[nlen]);nlen++);
-            //printf("To spell: %-*.*s %d\n", nlen, nlen, str,nlen);
             while (nlen > 0) {
                 if (was && buffer->flags & FLG_SPELCOMMA) pushbuf(",");
                 was = 1;
@@ -1229,7 +1231,7 @@ size_t stringifyDate(poldit *buffer, struct numberForm *nf)
     if (nf->starter) {
         pushbufl(nf->starter, nf->starterlen);
     }
-    len += getNumPosG(buffer, day, 0, (flags & MONFLG_DECLINE) ? 1 : 0);
+    if (day) len += getNumPosG(buffer, day, 0, (flags & MONFLG_DECLINE) ? 1 : 0);
     if (mon == MONTH_NONE && !nf->subtyp2) return len;
     if (mon != MONTH_NONE) {
         if (flags & MONFLG_NOMINAL) pushbufs(namedMonNom[mon-1]);
@@ -1258,7 +1260,6 @@ size_t stringifyDate(poldit *buffer, struct numberForm *nf)
     len += getNumPosTripletG(buffer, day, 0, (flags & MONFLG_DECLINE) ? 1 : 0);
     if (mon == MONTH_NONE) return len;
     pushbufs(namedMon[mon-1]);
-    ///printf("???\n");
     if (yer != YEAR_NONE) {
         if (flags & MONFLG_DECLINE) {
             len += getNumPosG(buffer, yer, 0, 1);
@@ -1400,7 +1401,6 @@ static uint8_t getDate(poldit *buffer,const char *str, const char **rest,
         
     _day = strtol(str, (char **)&str, 10);
     if (_day > 31) return 0;
-    //printf("DATE PART <%s>\n",str);
     
     if (!*str) goto retval;
         
@@ -1432,7 +1432,6 @@ static uint8_t getDate(poldit *buffer,const char *str, const char **rest,
     goto retval;
 
 getyear:
-    //printf("GY <%s>\n", str);
     if (!*str) goto retval;
     estr = str;
     if (marker == *str) {
@@ -1447,7 +1446,6 @@ getyear:
             znak = get_unichar(estr,&cc);
         }
     }
-    //printf("SS <%s>\n", estr);
     if (!*estr || !isdigit(*estr)) goto retval;
     m=strtol(estr,(char **) &estr, 10);
     if (m >= 1970 && m <= 2080) {
@@ -1455,7 +1453,6 @@ getyear:
         str = estr;
     }
 retval:
-    //printf("RETVAL\n");
     *day = _day;
     *month = _month;
     *year = _year;
@@ -1492,7 +1489,6 @@ static uint8_t isDate(poldit *buffer,const char *str, const char **rest, struct 
 
     
     if (getDate(buffer, str, &cc, &d1, &m1, &y1, MONFLG_NOMINAL,&outflags)) {
-        //printf("M = %d, Y=%d, F=%02x\n", m1, y1, outflags);
         if (m1 == MONTH_NONE) return 0;
         if (y1 == YEAR_NONE && !(outflags & MON_FORCE_DATE)) return 0;
         *rest = cc;
@@ -1521,31 +1517,24 @@ static uint8_t isDate(poldit *buffer,const char *str, const char **rest, struct 
     str = cc;
     edate = cc;
     str = unblank(str);
-    //printf("I am here %x <%s>\n",flags1,str);
     if (!(flags1 & DATEFLG_START)) goto retsingle;
-    //printf("Searching\n");
     for (i=0;_datepars[i].pat;i++) {
         if ((_datepars[i].flags & DATEFLG_FINAL) && cmatch(str,_datepars[i].pat,&str)) {
             flags2 = _datepars[i].flags;
             break;
         }
     }
-    //printf("DU %x\n",flags2);
     if (!(ib=_datepars[i].pat)) goto retsingle;
-    //printf("AIL=%s\n",ib);
     il = strlen(ib);
     if (!(getNextNumberType(buffer, str, NULL) & NTYP_DATE)) goto retsingle;
     if (!getDate(buffer, str, &cc, &d2, &m2, &y2, 0, &outflags)) goto retsingle;
-    //printf("FAN\n");
     flags1 |= outflags | flags2;
     nm2 = str;
     nm2len = cc - str;
     edate = cc;
-    //printf("NM2 %s\n",nm2);
 retsingle:
     outflags |= flags1;
     if (!nm2) { // single date;
-        //printf("MFDX %x M1 %d Y1 %d\n",flags1 & MON_FORCE_DATE,m1, y1);
         if (!(flags1 & MON_FORCE_DATE) && m1 == MONTH_NONE) return 0;
         if (y1 == YEAR_NONE && !(flags1 & MON_FORCE_DATE)) return 0;
     }
@@ -1561,9 +1550,7 @@ retsingle:
     nf->starterlen = sl;
     nf->subtyp1 = SDT_DATE;
     nf->mode = flags1;
-    //printf("RESRE <%s>\n",edate);
     if (nm2) { // dual
-        //printf("Dual date\n");
         nf->intv2 = _datecode(d2,m2,y2,flags1);
         nf->num2 = nm2;
         nf->num2len = nm2len;
@@ -1723,7 +1710,6 @@ static uint8_t isHour(poldit *buffer,const char *str, const char **rest, struct 
     nf->num2len = ln2s;
     *rest = curr;
     nf->intv2 = _hmscode(h2, m2, s2);
-    //printf("INNER %d %s\n",linn,sinn);
     nf->inner = sinn;
     nf->innerlen = linn;
     nf->subtyp2 = SDT_HOUR;
@@ -1739,12 +1725,77 @@ static int chrpos(const char *s, char c)
 }
 
 
+static uint8_t getDateFormat(poldit *buffer, const char *str, const char **rest, struct numberForm *nf, int declined)
+{
+    char dfm[4]={0,0,0,0};
+    int i,j,nx=0;
+    for (i=0;i<3 && *str;i++) {
+        if (!strchr("dmyx",*str)) break;
+        if (*str != 'x') {
+            for (j=0;j<i;j++) if (dfm[j] == *str) return 0;
+            nx = 1;
+        }
+        dfm[i] = *str++;
+    }
+    if (!dfm[0]) strcpy(dfm,"dmy");
+    else if (!nx) return 0;
+    if (*str++ != ':') return 0;
+    int _day=0, _mon = 0, _yer=-1;
+    i=0;
+    const char *nm1=str;
+    int flags = (declined) ? (MON_FORCE_DATE | MONFLG_DECLINE) : MON_FORCE_DATE;
+    while (*str && *str != ']') {
+        if (!isdigit(*str)) {
+            str++;
+            continue;
+        }
+        int n=strtol(str, (char **)&str, 10);
+        switch(dfm[i]) {
+            case 'd':
+            if (n<1 || n > 31) return 0;
+            _day = n;
+            break;
+
+            case 'm':
+            if (n<1 || n > 12) return 0;
+            _mon = n;
+            break;
+
+            case 'y':
+            if (n <0) return 0;
+            if (n < 100) n += 2000;
+            else if (n < 1000 || n > 2100) return 0;
+            _yer=n;
+            break;
+        }
+        
+        i++;
+        if (!dfm[i]) break;
+    }
+    const char *estr = str;
+    str=strchr(str,']');
+    if (!str) return 0;
+    
+    nf->intv1 = _datecode(_day,_mon,_yer,flags);
+    nf->num1 = nm1;
+    nf->num1len = estr-nm1;
+        
+    *rest = str+1;
+    nf->starter = NULL;
+    nf->starterlen = 0;
+    nf->subtyp1 = SDT_DATE;
+    nf->mode = flags | 0x80;
+    
+    return nf->type = DT_DATE;
+}
+
 static uint8_t isFormat(poldit *buffer, const char *str, const char **rest, struct numberForm *nf)
 {
     if (*str++ != 'F') return 0;
     if (*str++ !='[') return 0;
-    int mode=chrpos("pcnsS", *str++);
+    int mode=chrpos("pcnsSdD", *str++);
     if (mode < 0) return 0;
+    if (mode == FMT_DATE || mode == FMT_DATEDECL) return getDateFormat(buffer, str, rest, nf, mode == FMT_DATEDECL);
     int genre=0, declin=0;
     if (mode < 2) {
         if ((genre = chrpos("mfn", *str++)) < 0) return 0;
@@ -1760,11 +1811,9 @@ static uint8_t isFormat(poldit *buffer, const char *str, const char **rest, stru
         }
 
     }
+    
     if (*str++ != ':') return 0;
     const char *strbeg=str;
-    //printf("%s\n", strbeg);
-    //if (mode == FMT_SPELLALL && *str == '+') str++;
-    //if (!isdigit(*str)) return 0;
     uint32_t znak;
     const char *d;
     while (*str) {
@@ -1837,10 +1886,8 @@ size_t poldit_Convert(poldit *buffer,const char *c)
 {
     struct numberForm nf;
     size_t len = 0;
-    //printf("Converting %s\n",c);
     while (*c) {
         if (!getNumber(buffer,c, &c, &nf)) {
-            //printf("Tokenizer %s\n",c);
             len += nextToken(buffer, c,&c);
             continue;
         }
@@ -1889,7 +1936,6 @@ size_t poldit_Convert(poldit *buffer,const char *c)
         //pushbuf(" ");
     }
     if (buffer->outbuf) *(buffer->outbuf) = 0;
-    //printf("KLEN %d\n",(int)len);
     return len;
 
 }
