@@ -275,12 +275,18 @@ Dla p i c należy podać również:
 * rodzaj (m, f lub n)
 * przypadek (0-5, jeden z m, d, c, b, n, M lub mc jako miejscownik)
 
-Dla d i D można podać również ciąg znaków 'd', 'm', 'y' i 'x', określających
+Dla d i D można podać również ciąg znaków 'd', 'm', 'M' ,'y' i 'x', określających
 znaczenie poszczególnych liczb. Rozpoznawane są maksymalnie trzy liczby,
 przy czym 'x' oznacza że dana liczba zostanie pominięta. Domyślnie jest
 'dmy' czyli dzień - miesiąc - rok. Przykładowo:
 
 **F\[Dxdm:2000 5 11\]** zostanie odczytane jako **piątego listopada**.
+
+Znak 'M' oznacza rozszerzone rozpoznawanie miesiąca. W tym przypadku rozpoznawana jest
+również liczba rzymska lub pierwsze trzy litery nazwy miesiąca (polskiej lub angielskiej).
+Przykładowo:
+
+**F\[dMdy:jul 1, 2026\]** zostanie odczytane jako **pierwszy lipca dwa tysiące dwadzieścia sześć**.
 
 Przykłady szablonów:
 

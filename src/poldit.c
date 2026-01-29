@@ -1724,15 +1724,56 @@ static int chrpos(const char *s, char c)
     return d-s;
 }
 
+static const char *monfmts[] = {
+    "\001sty","\002lut","\003mar","\004kwi",
+    "\005maj","\006cze","\007lip","\010sie",
+    "\011wrz","\012paź","\012paz","\013lis","\014gru",
+    "\001jan","\002feb","\004apr","\005may","\006jun",
+    "\007jul","\010aug","\011sep","\012oct","\013nov",
+    "\014dec",NULL};
+    
+static uint8_t getDateMon(const char *str, const char **rest)
+{
+    uint8_t rc;
+    if (isdigit(*str)) {
+        rc=strtol(str,(char **)&str, 10);
+        if (rc < 1 || rc > 12) return 0;
+        *rest = str;
+        return rc;
+    }
+    int i, zn1, zn2;
+    const char *astr,*bstr;
+    for (i=0;monfmts[i];i++) {
+        bstr=monfmts[i]+1;
+        astr=str;
+        while (*bstr && *astr) {
+            zn1=zx_tolower(get_unichar(astr, &astr));
+            zn2=zx_tolower(get_unichar(bstr, &bstr));
+            if (zn1 != zn2) break;
+        }
+        if (zn1 != zn2) continue;
+        rc=monfmts[i][0];
+        while(*str && *str != ']') {
+            zn1=get_unichar(str, &astr);
+            if (!zx_isalpha(zn1)) break;
+            str=astr;
+        }
+        *rest = str;
+        return rc;
+    }
+    for (i=0;i<12;i++) if (umatch(str,romanMon[i],rest)) return i+1;
+    return 0;
+        
+}
 
 static uint8_t getDateFormat(poldit *buffer, const char *str, const char **rest, struct numberForm *nf, int declined)
 {
     char dfm[4]={0,0,0,0};
     int i,j,nx=0;
     for (i=0;i<3 && *str;i++) {
-        if (!strchr("dmyx",*str)) break;
+        if (!strchr("dmyxM",*str)) break;
         if (*str != 'x') {
-            for (j=0;j<i;j++) if (dfm[j] == *str) return 0;
+            for (j=0;j<i;j++) if (tolower(dfm[j]) == tolower(*str)) return 0;
             nx = 1;
         }
         dfm[i] = *str++;
@@ -1740,11 +1781,24 @@ static uint8_t getDateFormat(poldit *buffer, const char *str, const char **rest,
     if (!dfm[0]) strcpy(dfm,"dmy");
     else if (!nx) return 0;
     if (*str++ != ':') return 0;
-    int _day=0, _mon = 0, _yer=-1;
+    int _day=0, _mon = MONTH_NONE, _yer=-1;
     i=0;
     const char *nm1=str;
     int flags = (declined) ? (MON_FORCE_DATE | MONFLG_DECLINE) : MON_FORCE_DATE;
     while (*str && *str != ']') {
+        if (dfm[i] == 'M') {
+            int znak; const char *s;
+            znak=get_unichar(str,&s);
+            if (!zx_isalnum(znak)) {
+                str=s;
+                continue;
+            }
+            int n=getDateMon(str, &str);
+            if (n<1) return 0;
+            _mon=n;
+            
+            goto loop;
+        }
         if (!isdigit(*str)) {
             str++;
             continue;
@@ -1768,14 +1822,13 @@ static uint8_t getDateFormat(poldit *buffer, const char *str, const char **rest,
             _yer=n;
             break;
         }
-        
+loop:        
         i++;
         if (!dfm[i]) break;
     }
     const char *estr = str;
     str=strchr(str,']');
     if (!str) return 0;
-    
     nf->intv1 = _datecode(_day,_mon,_yer,flags);
     nf->num1 = nm1;
     nf->num1len = estr-nm1;
@@ -1785,7 +1838,6 @@ static uint8_t getDateFormat(poldit *buffer, const char *str, const char **rest,
     nf->starterlen = 0;
     nf->subtyp1 = SDT_DATE;
     nf->mode = flags | 0x80;
-    
     return nf->type = DT_DATE;
 }
 
@@ -2151,6 +2203,4 @@ int poldit_unitType(int unitPos, char utype, char *buffer)
     sprintf(buffer,"%s %s", unitDefs[unitPos].unit, unitDefs[unitPos].vals[0]);
     return unitPos + 1;
 }
-
-
 
