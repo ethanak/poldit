@@ -63,7 +63,15 @@ struct numberForm {
     uint8_t subtyp2;
     uint8_t type;
     uint8_t mode;
+    uint8_t decl1;
+    uint8_t wday1;
+    
 };
+
+#define MDAT_W 0x8
+#define MDAT_Z 0x10
+#define MDAT_COMMA 0x20
+
 
 // typ danych w numberForm.type
 enum {
@@ -653,13 +661,20 @@ static const char *const dg_subdecis[]={
     "setnej","setnych","setnych",
     "tysięcznej", "tysięcznych", "tysięcznych"};
 
-static const char *namedMon[] ={"stycznia","lutego","marca","kwietnia",
-    "maja","czerwca","lipca","sierpnia",
-    "września","października","listopada","grudnia" };
+static const char *namedMonDecl[12][6]={
+    {"styczeń","stycznia","styczniowi","styczeń","styczniem","styczniu"},
+    {"luty","lutego","lutemu","luty","lutym","lutym"},
+    {"marzec","marca","marcowi","marzec","marcem","marcu"},
+    {"kwiecień","kwietnia","kwietniowi","kwiecień","kwietniem","kwietniu"},
+    {"maj","maja","majowi","maj","majem","maju"},
+    {"czerwiec","czerwca","czerwcowi","czerwiec","czerwcem","czerwcu"},
+    {"lipiec","lipca","lipcowi","lipiec","lipcem","lipcu"},
+    {"sierpień","sierpnia","sierpniowi","sierpień","sierpniem","sierpniu"},
+    {"wrzesień","września","wrześniowi","wrzesień","wrześniem","wrześniu"},
+    {"październik","października","październikowi","październik","październikiem","październiku"},
+    {"listopad","listopada","listopadowi","listopad","listopadem","listopadzie"},
+    {"grudzień","grudnia","grudniowi","grudzień","grudniem","grudniu"}};
 
-static const char *namedMonNom[] ={"styczeń","luty","marzec","kwiecień",
-    "maj","czerwiec","lipiec","sierpień",
-    "wrzesień","październik","listopad","grudzień" };
 
 static const char *romanMon[] ={"I","II","III","IV","V","VI","VII",
         "VIII", "IX","X","XI","XII" };
@@ -795,7 +810,6 @@ static size_t getNumPosG(poldit *buffer, int n, int genre, int declin)
             pushbufs(_tysiace[fm]);
         }
         else {
-            //dg_milg
             int was = 0,mm;
             if (m != 1) {
                 if (m >= 100) {
@@ -913,13 +927,6 @@ static size_t getNumCntG(poldit *buffer, int n, int genre, int decl)
     if (n) len += getNumCntTripletG(buffer,n, genre, decl);
     return len;
 }
-/*
-static size_t _getNumCntTriplet(poldit *buffer, int n, int female)
-{
-    return getNumCntTripletG(buffer, n, female?1:0, 1);
-
-}
-*/
 // podstawowy triplet
 
 static size_t getNumTriplet(poldit *buffer,int n, int female, uint8_t uzero, uint8_t prezero)
@@ -933,7 +940,6 @@ static size_t getNumTriplet(poldit *buffer,int n, int female, uint8_t uzero, uin
         pushbufs("jedna");
         return len;
     }
-    //sif (prezero == 2 && n < 100) pushbufs("zero");
     if (prezero && n < 10) pushbufs("zero");
     if (n >=100) {
         pushbufs(dg_hun[n/100 - 1]);
@@ -1219,6 +1225,35 @@ size_t stringifyFmt(poldit *buffer, struct numberForm *nf)
     return len;
 }
 
+static const char * const wdaystr[][6] = {
+    {"niedziela", "niedzieli","niedzieli","niedzielę","niedzielą","niedzieli"},
+    {"poniedziałek", "poniedziałku", "poniedziałkowi", "poniedziałek","poniedziałkiem","poniedziałku"},
+    {"wtorek","wtorku","wtorku","wtorek","wtorkiem","wtorku"},
+    {"środa","środy","środzie","środę","środą","środzie"},
+    {"czwartek","czwartku","czwartkowi","czwartek","czwartkiem","czwartku"},
+    {"piątek","piątku","piątkowi","piątek","piątkiem","piątku"},
+    {"sobora","soboty","sobocie","sobotę","sobotą","sobocie"}};
+
+static size_t addWday(poldit *buffer, uint8_t wday, uint8_t wflags)
+{
+    size_t len = 0;
+    int w=(wday & 7) - 1;
+    int decl = wflags & 7;
+    if (wflags & MDAT_W) {
+        if (w == 2) pushbufs("we");
+        else pushbufs("w");
+        if (!(decl & 7)) decl = 3;
+    }
+    if (wflags & MDAT_Z) {
+        if (w == 3) pushbufs("ze");
+        else pushbufs("z");
+        if (!(decl & 7)) decl = 1;
+    }
+    pushbufs(wdaystr[w][decl]);
+    if (wflags & MDAT_COMMA) pushbuf(",");
+    return len;
+}
+
 size_t stringifyDate(poldit *buffer, struct numberForm *nf)
 {
     size_t len=0;
@@ -1226,16 +1261,54 @@ size_t stringifyDate(poldit *buffer, struct numberForm *nf)
     int mon = (nf->intv1 >> 5) & MONTH_NONE;
     int yer = (nf->intv1 >> 9) & YEAR_NONE;
     uint8_t flags = (nf->intv1 >> 23) & 0x7f;
-    
-
+    uint16_t wday=nf->wday1;
     if (nf->starter) {
         pushbufl(nf->starter, nf->starterlen);
     }
-    if (day) len += getNumPosG(buffer, day, 0, (flags & MONFLG_DECLINE) ? 1 : 0);
+    int decl = nf->decl1;
+
+    // brak odmiany dla 'd'
+    // możliwy tylko przecinek
+    
+    if (!(flags & MONFLG_DECLINE)) decl &= MDAT_COMMA;
+    
+    if (wday) {
+        len+=addWday(buffer, wday, decl);
+        decl = ((flags & MONFLG_DECLINE) || (decl & 0x1f))?1:0;
+    }
+    if (day) {
+        // 'w' nie ma sensu więc można pominąć
+        if (decl & MDAT_Z) {
+            pushbuf("z");
+            // jeśli nie podano przypadku to dopełniacz
+            // oczywiście mianownik nie ma sensu
+            // czyli można sobie go darować
+            if (!(decl & 7)) decl=(decl & 0xf8) | 1;
+        }
+        // jeśli nie podano przypadku dla deklinacji jest dopełniacz
+        else if (!(decl & 7) && (flags & MONFLG_DECLINE)) decl = 1;
+
+        len += getNumPosG(buffer, day, 0, decl & 7);
+        decl = decl ? 1 : 0;
+    }
+
     if (mon == MONTH_NONE && !nf->subtyp2) return len;
     if (mon != MONTH_NONE) {
-        if (flags & MONFLG_NOMINAL) pushbufs(namedMonNom[mon-1]);
-        else pushbufs(namedMon[mon-1]);
+        if (!day && !wday) {
+            if (decl & MDAT_W) {
+                if (mon == 9) pushbufs("we");
+                else pushbufs("w");
+                if (!(decl & 7)) decl = (decl & 0xf8) | 5;
+            }
+            else if (decl & MDAT_Z) {
+                if (mon == 1) pushbufs("ze");
+                else pushbufs("z");
+                if (!(decl & 7)) decl = (decl & 0xf8) | 1;
+            }
+        }
+        else decl = (flags & MONFLG_DECLINE) ? 1 : 0;
+        if (flags & MONFLG_NOMINAL) pushbufs(namedMonDecl[mon-1][0]);
+        else pushbufs(namedMonDecl[mon-1][decl & 7]);
         if (yer != YEAR_NONE) {
             if (flags & MONFLG_DECLINE) {
                 len += getNumPosG(buffer, yer, 0, 1);
@@ -1259,7 +1332,7 @@ size_t stringifyDate(poldit *buffer, struct numberForm *nf)
     }
     len += getNumPosTripletG(buffer, day, 0, (flags & MONFLG_DECLINE) ? 1 : 0);
     if (mon == MONTH_NONE) return len;
-    pushbufs(namedMon[mon-1]);
+    pushbufs(namedMonDecl[mon-1][1]);
     if (yer != YEAR_NONE) {
         if (flags & MONFLG_DECLINE) {
             len += getNumPosG(buffer, yer, 0, 1);
@@ -1343,11 +1416,11 @@ static int getDitMonth(const char *str, const char **rest, uint8_t flags, uint8_
             break;
         }
         if (flags & MONFLG_NATURAL) {
-            if (cmatch(str,namedMon[i],&str)) {
-                *oflags = MONFLG_NATURAL;
+            if (cmatch(str,namedMonDecl[i][1],&str)) {
+                *oflags = MONFLG_NATURAL | MONFLG_DECLINE;
                 break;
             }
-            if ((flags & MONFLG_NOMINAL) && cmatch(str, namedMonNom[i],&str)) {
+            if ((flags & MONFLG_NOMINAL) && cmatch(str, namedMonDecl[i][0],&str)) {
                 *oflags = MONFLG_NATURAL | MONFLG_NOMINAL;
                 break;
             }
@@ -1421,7 +1494,7 @@ static uint8_t getDate(poldit *buffer,const char *str, const char **rest,
             znak = get_unichar(estr, &cc);
             if (!zx_isspace(znak)) break;
         }
-        if (!*cc) goto retval;
+        if (!*estr) goto retval;
         m=getDitMonth(estr, &estr, MONFLG_NATURAL | flags, &oflags);
         if (!m) goto retval;
         marker = 0; // means 'space'
@@ -1497,6 +1570,7 @@ static uint8_t isDate(poldit *buffer,const char *str, const char **rest, struct 
         nf->num1len = cc - str;
         nf->subtyp1 = SDT_DATE;
         nf->mode = outflags;
+        nf->decl1 = (outflags & MONFLG_DECLINE)?1 : 0;
         return nf->type = DT_DATE;
     }
 
@@ -1766,36 +1840,148 @@ static uint8_t getDateMon(const char *str, const char **rest)
         
 }
 
+static const char *wdayfmts[]={
+    "\001nd.","\001ni","\001sun",
+    "\002pn.","\002po","\002mon",
+    "\003wt","\003tue",
+    "\004sr","\004śr","\004wed",
+    "\005cz","\005thu",
+    "\006pt.","\006pi","\002fri",
+    "\007sb.","\007so","\002sat",
+    NULL};
+    
+        
+static uint8_t getDateWday(const char *str, const char **rest)
+{
+    uint8_t rc;
+    if (isdigit(*str)) {
+        rc=strtol(str,(char **)&str, 10);
+        if (rc < 0 || rc > 7) return 0;
+        *rest = str;
+        return (rc % 7) + 1;
+    }
+    int i, zn1, zn2;
+    const char *astr,*bstr;
+    for (i=0;wdayfmts[i];i++) {
+        bstr=wdayfmts[i]+1;
+        astr=str;
+        int bad = 0;
+        while (*bstr && *astr) {
+            zn1=zx_tolower(get_unichar(astr, &astr));
+            zn2=zx_tolower(get_unichar(bstr, &bstr));
+            if (zn2 == '.') {
+                if (zx_isalnum(zn1))  bad=1;
+                break;
+            }
+            if (zn1 != zn2) {
+                bad=1;break;
+            }
+        }
+        if (bad) continue;
+        rc=wdayfmts[i][0];
+        while(*str && *str != ']') {
+            zn1=get_unichar(str, &astr);
+            if (!zx_isalpha(zn1)) break;
+            str=astr;
+        }
+        *rest = str;
+        return rc;
+    }
+    return 0;
+}
+
+static int getDeclination(const char **str)
+{
+    if (**str == 'm' && (*str)[1] == 'c') {
+        *str += 2;
+        return 5;
+    }
+    int j=chrpos("mdcbnM",**str);
+    if (j<0) j=chrpos("012345",**str);
+    if (j >= 0) {
+        (*str)++;
+        return j;
+    }
+    return -1;
+}
+
+static int getDateDecl(const char *str, const char **rest)
+{
+    uint8_t declin = 0;int j;
+    for (;*str;str++) {
+        if (*str == ',') {
+            declin |= MDAT_COMMA;
+        }
+        else if (*str >= '0' && *str <= '5') {
+            declin = (declin & 0xf8) | (*str - '0');
+        }
+        else if (*str == 'm' && str[1] == 'c') {
+            str++;
+            declin = (declin & 0xf8) | 5;
+        }
+        else if (*str == 'w') {
+            declin = (declin & ~(MDAT_Z | 7)) | MDAT_W;
+        }
+        else if (*str == 'z') {
+            declin = (declin & ~(MDAT_W | 7)) | MDAT_Z;
+        }
+        else if ((j=chrpos("mdcbnM", *str)) >= 0) {
+            declin = (declin & 0xf8) | j;
+        }
+        else break;
+    }
+    *rest = str;
+    return declin;
+}
+
 static uint8_t getDateFormat(poldit *buffer, const char *str, const char **rest, struct numberForm *nf, int declined)
 {
-    char dfm[4]={0,0,0,0};
-    int i,j,nx=0;
-    for (i=0;i<3 && *str;i++) {
-        if (!strchr("dmyxM",*str)) break;
+    char dfm[5]={0,0,0,0,0};
+    int i,j,nx=0, dcled = 0, isiso=0;
+        
+    for (i=0;i<4 && *str;i++) {
+        if (!strchr("dmyxMWI",*str)) break;
         if (*str != 'x') {
-            for (j=0;j<i;j++) if (tolower(dfm[j]) == tolower(*str)) return 0;
-            nx = 1;
+            for (j=0;j<i;j++) {
+                if (tolower(dfm[j]) == tolower(*str)) return 0;
+            }
+            if (*str == 'I' && (nx & 1)) return 0;
+            if (*str != 'W' && isiso) return 0;
+            if (*str == 'I') isiso = 1;
+            nx |= (*str == 'W')?2:1;
         }
         dfm[i] = *str++;
+    }
+    if (*str == '/') {
+        dcled = getDateDecl(str+1, &str);
     }
     if (!dfm[0]) strcpy(dfm,"dmy");
     else if (!nx) return 0;
     if (*str++ != ':') return 0;
-    int _day=0, _mon = MONTH_NONE, _yer=-1;
+    int _day=0, _mon = MONTH_NONE, _yer=-1, _wday=0;
     i=0;
     const char *nm1=str;
     int flags = (declined) ? (MON_FORCE_DATE | MONFLG_DECLINE) : MON_FORCE_DATE;
     while (*str && *str != ']') {
-        if (dfm[i] == 'M') {
+        if (dfm[i] == 'M' || dfm[i] == 'W') {
             int znak; const char *s;
             znak=get_unichar(str,&s);
             if (!zx_isalnum(znak)) {
                 str=s;
                 continue;
             }
-            int n=getDateMon(str, &str);
-            if (n<1) return 0;
-            _mon=n;
+            
+            int n;
+            if (dfm[i] == 'M') {
+                n=getDateMon(str, &str);
+                if (n<1) return 0;
+                _mon=n;
+            }
+            else {
+                n=getDateWday(str, &str);
+                if (n < 1) return 0;
+                _wday = n;
+            }
             
             goto loop;
         }
@@ -1803,6 +1989,17 @@ static uint8_t getDateFormat(poldit *buffer, const char *str, const char **rest,
             str++;
             continue;
         }
+        if (dfm[i] == 'I') {
+            const char *s;
+            uint64_t dat = strtol(str, (char **)&s, 10);
+            if (s-str != 8) return 0;
+            _day = dat % 100;
+            _mon = (dat / 100) % 100;
+            _yer = dat / 10000;
+            if (_mon < 1 || _mon > 12 || _day < 1 || _day > 31) return 0;
+            break;
+        }
+            
         int n=strtol(str, (char **)&str, 10);
         switch(dfm[i]) {
             case 'd':
@@ -1837,7 +2034,9 @@ loop:
     nf->starter = NULL;
     nf->starterlen = 0;
     nf->subtyp1 = SDT_DATE;
-    nf->mode = flags | 0x80;
+    nf->mode = flags;// | 0x80;
+    nf->wday1 = _wday;
+    nf->decl1 = dcled;
     return nf->type = DT_DATE;
 }
 
@@ -1851,17 +2050,7 @@ static uint8_t isFormat(poldit *buffer, const char *str, const char **rest, stru
     int genre=0, declin=0;
     if (mode < 2) {
         if ((genre = chrpos("mfn", *str++)) < 0) return 0;
-        if (*str == 'm' && str[1] == 'c') {
-            declin = 5;
-            str += 2;
-        }
-        else {
-            declin = chrpos("012345", *str);
-            if (declin < 0) declin = chrpos("mdcbnM", *str);
-            if (declin < 0) return 0;
-            str++;
-        }
-
+        if ((declin=getDeclination(&str))<0) return 0;
     }
     
     if (*str++ != ':') return 0;

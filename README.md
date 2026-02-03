@@ -251,7 +251,7 @@ poldit mainBuffer;
 
 ## KONWERSJA
 
-* Propgram rozpoznaje daty, godziny, adresy IPv4 oraz zwykłe liczby
+* Program rozpoznaje daty, godziny, adresy IPv4 oraz zwykłe liczby
 * Program rozpoznaje również typowe konstrukcje (np. od ... do ...)
 * W przypadku kiedy program błędnie odmienia liczby można poprzedzić ją znakiem '\' - przykładowo:
     * ```numery 1 do 3```  => numery jeden do trzech
@@ -275,18 +275,42 @@ Dla p i c należy podać również:
 * rodzaj (m, f lub n)
 * przypadek (0-5, jeden z m, d, c, b, n, M lub mc jako miejscownik)
 
-Dla d i D można podać również ciąg znaków 'd', 'm', 'M' ,'y' i 'x', określających
-znaczenie poszczególnych liczb. Rozpoznawane są maksymalnie trzy liczby,
-przy czym 'x' oznacza że dana liczba zostanie pominięta. Domyślnie jest
-'dmy' czyli dzień - miesiąc - rok. Przykładowo:
+Dla d i D można podać również ciąg znaków 'd', 'm', 'M' ,'y' ,'W', 'I' i 'x', określających
+znaczenie poszczególnych pozycji. Rozpoznawane są maksymalnie cztery pozycje:
 
-**F\[Dxdm:2000 5 11\]** zostanie odczytane jako **piątego listopada**.
+* W - dzień tygodnia. Rozpoznawane są cyfry od 0 do 7 (licząc od niedzieli) oraz skróty polskie i angielskie.
+* d - dzień miesiąca 1 do 31
+* m - miesiąc liczbowo 1 do 12
+* M - miesiąc ogólnie. Rozpoznawane są liczby, liczby rzymskie oraz skróty polskie i angielskie
+* y - rok
+* I - zapis ISO (8 cyfr YYYYmmdd)
+* x - pomijana liczba
 
-Znak 'M' oznacza rozszerzone rozpoznawanie miesiąca. W tym przypadku rozpoznawana jest
-również liczba rzymska lub pierwsze trzy litery nazwy miesiąca (polskiej lub angielskiej).
+Domyslnie jest to **dmy**
+
+Po ciągu definiującym kolejność może wystąpić modyfikator. Rozpoczyna się on od znaku **'/'** i może zawierać:
+
+* , - oznacza, że dzień tygodnia będzie oddzielony przecinkiem w napisie wynikowym
+* w - oznacza, że wynik będzie poprzedzony spójnikiem "w" lub "we" (zależnie od pierwszego słowa wyniku) o ile będzie to możliwe. Jako przypadek będzie zastosowany biernik w przypadku dnia tygodnia, miejscownik w przypadku miesiąca.
+* z - oznacza, że wynik będzie poprzedzony spójnikiem "z" lub "ze" (zależnie od pierwszego słowa wyniku) o ile będzie to możliwe. Jako przypadek będzie zastosowany dopełniacz.
+* oznaczenie przypadku (1-5, jeden z d, c, b, n, M lub mc jako miejscownik). Nie należy stosować mianownika!
+
+Dla formatu 'd' modyfikatory oprócz **','** nie są uwzględniane.
+
 Przykładowo:
 
-**F\[dMdy:jul 1, 2026\]** zostanie odczytane jako **pierwszy lipca dwa tysiące dwadzieścia sześć**.
+* **F\[Dxdm:2000 5 11\]** zostanie odczytane jako **piątego listopada**.
+
+* **F\[dMdy:jul 1, 2026\]** zostanie odczytane jako **pierwszy lipca dwa tysiące dwadzieścia sześć**.
+
+* **F\[DWdM/,w: wt 3 V\]** zostanie odczytane jako **we wtorek, trzeciego maja**.
+
+**UWAGA**
+
+Nie wszystkie kombinacje dla formatu D mają sens nawet jeśli tworzą poprawny ciąg!
+Przykładowo **F\[DWxM/z:1 2 3\]** będzie skonwertowany na **"z poniedziałkowi marca"**,
+co najprawdopodobniej nie jest pożądanym wynikiem. Funkcja mimo wszystko próbuje
+skonwertować tekst według formatu. 
 
 Przykłady szablonów:
 
@@ -295,4 +319,5 @@ Pociąg ze Szczecina wjeżdża na tor F[pmb:%d] przy peronie F[pmM:%d]
 Autobus do Pcimia wjeżdża na stanowisko F[pnb:%d]
 Wagony numer %d do \%d zatrzymują się w sektorze F[pmM:%d]
 telefon F[S:+%s %s]
+
 ```
