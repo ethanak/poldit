@@ -1113,7 +1113,10 @@ static size_t stringifyHour(poldit *buffer,int hms, uint8_t mode)
     static const char * const scs[]={"sekunda", "sekundy","sekund"};
     size_t len=0;
     len += getNumPosTriplet(buffer,h, 1, 0, mode);
-    if (m != 255) {
+    if (m == 1) {
+        pushbufs("jeden");
+    }
+    else if (m != 255) {
         int col = (s == 255) ?!(buffer->flags & FLG_COLL) : 1;
         len += getNumTriplet(buffer,m, 1, col , col?1:0);
         if (s != 255) {
